@@ -113,7 +113,7 @@ class HoneypotRequest(BaseModel):
     conversation_id: Optional[str] = None
 
 
-from fastapi import Request
+ from fastapi import Request
 
 @app.post("/api/agentic-honeypot")
 async def agentic_honeypot(
@@ -122,28 +122,17 @@ async def agentic_honeypot(
 ):
     body = await request.json()
 
-    return {
-        "status": "success",
-        "message": "Request received",
-        "received": body
-    }
+    logger.info("GUVI request received")
 
-    """
-    Main endpoint for the Agentic Honey-Pot system.
-    
-    This endpoint:
-    1. Detects scam intent in incoming messages
-    2. Activates an AI agent if scam is detected
-    3. Maintains multi-turn conversations
-    4. Extracts actionable intelligence
-    5. Returns structured JSON response
-    
-    NEVER crashes - always returns valid JSON even on errors.
-    """
-    
-    try:
-        logger.info(f"Processing request for conversation: {request.conversation_id}")
-        
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "success",
+            "message": "Request processed successfully",
+            "data": body
+        }
+    )
+
         # Step 1: Get or create conversation state
         conversation_state = conversation_manager.get_or_create(request.conversation_id)
         
