@@ -16,7 +16,8 @@ API_KEY = os.getenv("API_KEY")
 
 
 from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import APIKeyHeader
+
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
@@ -71,30 +72,30 @@ app = FastAPI(
 )
 
 # Security
-security = HTTPBearer()
+
+
+api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
+
 API_KEY = os.getenv("API_KEY")
 
 if not API_KEY:
     logger.warning("API_KEY environment variable not set! Authentication will fail.")
 
-def verify_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)) -> bool:
-    """Verify Bearer token against API_KEY environment variable"""
+def verify_api_key(api_key: str = Depends(api_key_header)) -> bool:
     if not API_KEY:
-        logger.error("API_KEY not configured")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Server configuration error"
+            detail="Server API key not configured"
         )
-    
-    if credentials.credentials != API_KEY:
-        logger.warning(f"Invalid API key attempt")
+
+    if api_key != API_KEY:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authenticated"
         )
-    
+
     return True
+
 
 @app.get("/health")
 async def health_check():
