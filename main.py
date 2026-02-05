@@ -103,11 +103,13 @@ async def health_check():
     return {"status": "healthy", "service": "agentic-honeypot"}
 from pydantic import BaseModel
 from typing import Optional
+from pydantic import BaseModel
+from typing import Optional
 
 class HoneypotRequest(BaseModel):
     language: str
-    audio_format: str
     audio_base64: str
+    audio_format: Optional[str] = None
     conversation_id: Optional[str] = None
 
 
