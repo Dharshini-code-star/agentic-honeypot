@@ -101,6 +101,15 @@ def verify_api_key(api_key: str = Depends(api_key_header)) -> bool:
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "agentic-honeypot"}
+from pydantic import BaseModel
+from typing import Optional
+
+class HoneypotRequest(BaseModel):
+    language: str
+    audio_format: str
+    audio_base64: str
+    conversation_id: Optional[str] = None
+
 
 @app.post("/api/agentic-honeypot", response_model=HoneypotResponse)
 async def agentic_honeypot(
