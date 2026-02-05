@@ -108,7 +108,7 @@ class HoneypotRequest(BaseModel):
     conversation_id: Optional[str] = None
 
 
- from fastapi import Request
+from fastapi import Request
 
 @app.post("/api/agentic-honeypot")
 async def agentic_honeypot(
@@ -126,6 +126,7 @@ async def agentic_honeypot(
             "message": "Request processed successfully",
             "data": body
         }
+    )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
