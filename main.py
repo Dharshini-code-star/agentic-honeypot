@@ -113,11 +113,21 @@ class HoneypotRequest(BaseModel):
     conversation_id: Optional[str] = None
 
 
-@app.post("/api/agentic-honeypot", response_model=HoneypotResponse)
+from fastapi import Request
+
+@app.post("/api/agentic-honeypot")
 async def agentic_honeypot(
-    request: HoneypotRequest,
+    request: Request,
     authenticated: bool = Depends(verify_api_key)
-) -> JSONResponse:
+):
+    body = await request.json()
+
+    return {
+        "status": "success",
+        "message": "Request received",
+        "received": body
+    }
+
     """
     Main endpoint for the Agentic Honey-Pot system.
     
