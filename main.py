@@ -22,12 +22,7 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
 
-from app.models import HoneypotRequest, HoneypotResponse
-from app.intent_detector import IntentDetector
-from app.agent import ScamEngagementAgent
-from app.intelligence_extractor import IntelligenceExtractor
-from app.conversation_manager import ConversationManager
-from app.response_builder import ResponseBuilder
+
 
 # Configure logging
 logging.basicConfig(
@@ -131,76 +126,7 @@ async def agentic_honeypot(
             "message": "Request processed successfully",
             "data": body
         }
-    )
 
-        # Step 1: Get or create conversation state
-        conversation_state = conversation_manager.get_or_create(request.conversation_id)
-        
-        # Step 2: Detect scam intent
-        # Combine current message with history for better context
-        full_context = {
-            "message": request.message,
-            "history": request.history or []
-        }
-        
-        scam_detected = intent_detector.detect_scam(full_context)
-        logger.info(f"Scam detection result: {scam_detected}")
-        
-        # Step 3: Update conversation state
-        conversation_state["scam_detected"] = conversation_state.get("scam_detected", False) or scam_detected
-        conversation_state["turn_count"] = conversation_state.get("turn_count", 0) + 1
-        
-        # Step 4: Determine if agent should be activated
-        agent_activated = conversation_state["scam_detected"]
-        
-        # Step 5: Generate agent reply
-        agent_reply = ""
-        if agent_activated:
-            agent_reply = agent.generate_response(
-                message=request.message,
-                history=request.history or [],
-                conversation_state=conversation_state
-            )
-        else:
-            # Not a scam, provide neutral response
-            agent_reply = agent.generate_neutral_response(request.message)
-        
-        # Step 6: Extract intelligence from the message
-        extracted_intelligence = intelligence_extractor.extract(request.message)
-        
-        # Step 7: Calculate engagement metrics
-        engagement_metrics = conversation_manager.get_metrics(request.conversation_id)
-        
-        # Step 8: Build the response using ResponseBuilder (single source of truth)
-        response = response_builder.build_success_response(
-            scam_detected=conversation_state["scam_detected"],
-            agent_activated=agent_activated,
-            agent_reply=agent_reply,
-            engagement_metrics=engagement_metrics,
-            extracted_intelligence=extracted_intelligence
-        )
-        
-        logger.info(f"Successfully processed request for conversation: {request.conversation_id}")
-        
-        return JSONResponse(content=response, status_code=200)
-        
-    except HTTPException:
-        # Re-raise HTTP exceptions (like 401)
-        raise
-        
-    except Exception as e:
-        # Catch ANY unexpected error and return safe fallback
-        logger.error(f"Error processing request: {str(e)}", exc_info=True)
-        
-        # Use ResponseBuilder for consistent error responses
-        error_response = response_builder.build_error_response(
-            error_message=str(e),
-            conversation_id=request.conversation_id
-        )
-        
-        return JSONResponse(content=error_response, status_code=200)
-
-# Global exception handler as final safety net
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """
